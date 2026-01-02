@@ -36,3 +36,6 @@ windows-registry = "0.6.1"
 
 [build-dependencies]
 winres = "0.1.12"
+
+[profile.release]
+debug = true

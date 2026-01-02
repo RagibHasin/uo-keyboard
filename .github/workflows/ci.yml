@@ -9,50 +9,26 @@ env:
 
 jobs:
   build:
-    runs-on: ${{ matrix.os }}
-    strategy:
-      matrix:
-        os: [windows-latest]
-        include:
-          - os: windows-latest
-            artifact_name: uo_keyboard.dll
-            artifact_path: target/release/uo_keyboard.dll
+    runs-on: windows-latest
 
     steps:
     - uses: actions/checkout@v6
-
-    - name: Install Rust toolchain
-      uses: dtolnay/rust-toolchain@stable
-
-    - name: Cache cargo registry
-      uses: actions/cache@v5
-      with:
-        path: ~/.cargo/registry
-        key: ${{ runner.os }}-cargo-registry-${{ hashFiles('**/Cargo.lock') }}
-
-    - name: Cache cargo index
-      uses: actions/cache@v5
-      with:
-        path: ~/.cargo/git
-        key: ${{ runner.os }}-cargo-git-${{ hashFiles('**/Cargo.lock') }}
-
-    - name: Cache target directory
-      uses: actions/cache@v5
-      with:
-        path: target
-        key: ${{ runner.os }}-target-${{ hashFiles('**/Cargo.lock') }}
-
+    - uses: dtolnay/rust-toolchain@stable
+    - uses: Swatinem/rust-cache@v2
+      
     - name: Run tests
       run: cargo test --verbose
 
     - name: Build release
       run: cargo build --release --verbose
 
-    - name: Upload artifact
-      uses: actions/upload-artifact@v6
+    - uses: actions/upload-artifact@v6
       with:
-        name: ${{ matrix.os }}-binary
-        path: ${{ matrix.artifact_path }}
+        name: uo_keyboard
+        path: |
+          target/release/uo_keyboard.dll
+          target/release/uo_keyboard.pdb
+        compression-level: 9
         if-no-files-found: error
 
   release:
@@ -63,22 +39,23 @@ jobs:
       contents: write
     
     steps:
-    - uses: actions/checkout@v6
-    
-    - name: Download all artifacts
-      uses: actions/download-artifact@v7
+    - uses: actions/checkout@v6    
+    - uses: actions/download-artifact@v7
       with:
         path: artifacts
     
     - name: Display structure
       run: ls -R artifacts
     
+    - name: Re-Tag preview
+      run: gh release delete preview --yes || true
+
     - name: Create Release
       id: create_release
       uses: softprops/action-gh-release@v2
       with:
-        tag_name: build-${{ github.sha }}
-        name: Build ${{ github.sha }}
+        tag_name: preview
+        name: Ũõ Keyboard Preview
         draft: false
         prerelease: true
         files: |

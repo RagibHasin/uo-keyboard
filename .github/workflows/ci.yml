@@ -49,6 +49,8 @@ jobs:
     
     - name: Re-Tag preview
       run: gh release delete preview --yes || true
+      env:
+        GH_TOKEN: ${{ github.token }}
 
     - name: Create Release
       id: create_release

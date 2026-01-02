@@ -8,7 +8,7 @@ Phonetic translation uses another fantastic open-source project [`rupantor`](htt
 
 ## How to use
 
-1. Download `uo_keyboard.dll` from the [latest](https://github.com/RagibHasin/uo-keyboard/releases/latest) release.
+1. Download `uo_keyboard.dll` from the [latest](https://github.com/RagibHasin/uo-keyboard/releases) release.
 2. Run `regsvr32 uo_keyboard.dll` from an elevated terminal.
 3. Press <kbd>⊞ + Space</kbd> to cycle through IMEs.
 

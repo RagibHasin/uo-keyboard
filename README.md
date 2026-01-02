@@ -6,6 +6,12 @@ Code is loosely based on the [sample IME from Windows classic samples](https://g
 
 Phonetic translation uses another fantastic open-source project [`rupantor`](https://github.com/OpenBangla/rupantor-rs).
 
+## How to use
+
+1. Download `uo_keyboard.dll` from the [latest](https://github.com/RagibHasin/uo-keyboard/releases/latest) release.
+2. Run `regsvr32 uo_keyboard.dll` from an elevated terminal.
+3. Press <kbd>⊞ + Space</kbd> to cycle through IMEs.
+
 ## License
 
 This project is licensed under Mozilla Public License 2.0, following the precedent of its inspirations.

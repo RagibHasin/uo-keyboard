@@ -15,8 +15,8 @@ jobs:
         os: [windows-latest]
         include:
           - os: windows-latest
-            artifact_name: uo-keyboard.dll
-            artifact_path: target/release/uo-keyboard.dll
+            artifact_name: uo_keyboard.dll
+            artifact_path: target/release/uo_keyboard.dll
 
     steps:
     - uses: actions/checkout@v4

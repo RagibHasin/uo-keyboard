@@ -8,8 +8,8 @@ use windows::Win32::System::{SystemServices::*, Threading::*};
 
 use crate::*;
 
-pub(crate) static DLL_INSTANCE: AtomicPtr<std::ffi::c_void> = AtomicPtr::new(std::ptr::null_mut());
-pub(crate) static mut CS: CRITICAL_SECTION = unsafe { core::mem::zeroed() };
+static DLL_INSTANCE: AtomicPtr<std::ffi::c_void> = AtomicPtr::new(std::ptr::null_mut());
+static mut CS: CRITICAL_SECTION = unsafe { core::mem::zeroed() };
 
 pub(crate) fn instance_handle() -> HMODULE {
     HMODULE(DLL_INSTANCE.load(Relaxed))
@@ -64,7 +64,7 @@ unsafe extern "system" fn DllMain(
                 return false.into();
             }
             std::panic::set_hook(Box::new(tracing_panic::panic_hook));
-            let trace_filter = tracing_subscriber::EnvFilter::new("error,winimers=trace");
+            let trace_filter = tracing_subscriber::EnvFilter::new("error,uo_keyboard=trace");
             tracing_subscriber::registry()
                 .with(
                     tracing_etw::LayerBuilder::new("UoBanglaKeyboard")

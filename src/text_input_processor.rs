@@ -83,7 +83,7 @@ impl ITfTextInputProcessor_Impl for Ime_Impl {
     // #[tracing::instrument(skip_all, ret, err)]
     fn Deactivate(&self) -> Result<()> {
         tracing::trace!("deactivate ime");
-        self.finish_composition()?;
+        self.finish_composition(None)?;
 
         if let Some(state) = self.state.take() {
             state.destroy()?;

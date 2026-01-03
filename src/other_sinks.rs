@@ -30,7 +30,7 @@ impl ITfTextEditSink_Impl for Ime_Impl {
             && !utils::is_range_covered(edit_cookie, &selection_range, &range?)
         {
             tracing::trace!("range clobber");
-            self.finish_composition()?;
+            self.finish_composition(ctx.as_ref(), )?;
         }
 
         Ok(())

@@ -6,18 +6,18 @@ use crate::*;
 #[derive(Debug)]
 pub(crate) struct Composition {
     pub(crate) tf_composition: ITfComposition,
-    pub(crate) ctx: ITfContext,
-    pub(crate) input: String,
+    ctx: ITfContext,
+    input: String,
 }
 
 #[derive(Debug)]
-pub(crate) struct EditSession {
-    pub(crate) ime: ComObject<Ime>,
-    pub(crate) ctx: ITfContext,
+struct EditSession {
+    ime: ComObject<Ime>,
+    ctx: ITfContext,
 }
 
 impl EditSession {
-    pub(crate) fn new(ime: &Ime_Impl, ctx: &ITfContext) -> Self {
+    fn new(ime: &Ime_Impl, ctx: &ITfContext) -> Self {
         EditSession {
             ime: ime.to_object(),
             ctx: ctx.clone(),
@@ -77,8 +77,11 @@ impl EditSession {
         utils::set_selection(edit_cookie, &self.ctx, selection)
             .map_err(|e| Error::new(e.code(), "failed to set selection"))?;
 
-        unsafe { composition.tf_composition.EndComposition(edit_cookie) }
-            .map_err(|e| Error::new(e.code(), "failed to end compoition"))
+        match unsafe { composition.tf_composition.EndComposition(edit_cookie) } {
+            Ok(()) => Ok(()),
+            Err(e) if e.code() == E_UNEXPECTED => Ok(()),
+            Err(e) => Err(Error::new(e.code(), "failed to end compoition")),
+        }
     }
 
     #[tracing::instrument(skip_all, ret, err)]
@@ -125,13 +128,7 @@ impl EditSession {
     }
 
     // #[tracing::instrument(skip_all, ret, err)]
-    pub(crate) fn set_prop(
-        &self,
-        edit_cookie: u32,
-        range: &ITfRange,
-        prop: GUID,
-        value: i32,
-    ) -> Result<()> {
+    fn set_prop(&self, edit_cookie: u32, range: &ITfRange, prop: GUID, value: i32) -> Result<()> {
         let language_prop = unsafe { self.ctx.GetProperty(&prop) }?;
         let var = windows::Win32::System::Variant::VARIANT::from(value);
         unsafe { language_prop.SetValue(edit_cookie, range, &var) }
@@ -140,9 +137,9 @@ impl EditSession {
 
 #[implement(ITfEditSession)]
 #[derive(Debug)]
-pub(crate) struct AddSingleEditSession {
-    pub(crate) base: EditSession,
-    pub(crate) ch: u8,
+struct AddSingleEditSession {
+    base: EditSession,
+    ch: u8,
 }
 
 impl ITfEditSession_Impl for AddSingleEditSession_Impl {
@@ -168,9 +165,9 @@ impl ITfEditSession_Impl for AddSingleEditSession_Impl {
 
 #[implement(ITfEditSession)]
 #[derive(Debug)]
-pub(crate) struct AppendEditSession {
-    pub(crate) base: EditSession,
-    pub(crate) ch: u8,
+struct AppendEditSession {
+    base: EditSession,
+    ch: u8,
 }
 
 impl ITfEditSession_Impl for AppendEditSession_Impl {
@@ -190,8 +187,8 @@ impl ITfEditSession_Impl for AppendEditSession_Impl {
 
 #[implement(ITfEditSession)]
 #[derive(Debug)]
-pub(crate) struct PopCharEditSession {
-    pub(crate) base: EditSession,
+struct PopCharEditSession {
+    base: EditSession,
 }
 
 impl ITfEditSession_Impl for PopCharEditSession_Impl {
@@ -212,8 +209,8 @@ impl ITfEditSession_Impl for PopCharEditSession_Impl {
 
 #[implement(ITfEditSession)]
 #[derive(Debug)]
-pub(crate) struct FinishEditSession {
-    pub(crate) base: EditSession,
+struct FinishEditSession {
+    base: EditSession,
 }
 
 impl ITfEditSession_Impl for FinishEditSession_Impl {
@@ -224,7 +221,7 @@ impl ITfEditSession_Impl for FinishEditSession_Impl {
 }
 
 impl Ime_Impl {
-    pub(crate) fn request_edit_session(
+    fn request_edit_session(
         &self,
         ctx: &ITfContext,
         edit_session: impl ComObjectInner<Outer: ComObjectInterface<ITfEditSession>>,
@@ -273,8 +270,11 @@ impl Ime_Impl {
     }
 
     #[tracing::instrument(skip_all, ret, err)]
-    pub(crate) fn finish_composition(&self) -> Result<()> {
-        let Some(ctx) = self.composition().map(|c| c.ctx.clone()) else {
+    pub(crate) fn finish_composition(&self, ctx: Option<&ITfContext>) -> Result<()> {
+        let Some(ctx) = ctx
+            .cloned()
+            .or_else(|| self.composition().map(|c| c.ctx.clone()))
+        else {
             return Ok(());
         };
 
@@ -291,6 +291,6 @@ impl ITfCompositionSink_Impl for Ime_Impl {
     // #[tracing::instrument(skip_all, ret, err)]
     fn OnCompositionTerminated(&self, _: u32, _: Ref<'_, ITfComposition>) -> Result<()> {
         tracing::trace!("composition termination");
-        self.finish_composition()
+        self.finish_composition(None)
     }
 }

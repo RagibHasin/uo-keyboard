@@ -4,6 +4,7 @@
 use crate::*;
 
 use key_class::KeyClass;
+use windows::Win32::UI::Input::KeyboardAndMouse::*;
 
 impl Ime_Impl {
     // This theoretically makes sense, but a confirmation is needed whether a real
@@ -24,7 +25,7 @@ impl ITfKeyEventSink_Impl for Ime_Impl {
         Ok(())
     }
 
-    // #[tracing::instrument(skip_all, ret, err)]
+    #[tracing::instrument(skip_all, ret, err)]
     fn OnTestKeyDown(&self, _: Ref<'_, ITfContext>, wparam: WPARAM, _: LPARAM) -> Result<BOOL> {
         if self.is_keyboard_disabled() {
             return Ok(FALSE);
@@ -51,16 +52,42 @@ impl ITfKeyEventSink_Impl for Ime_Impl {
         self.OnKeyUp(ctx, wparam, lparam)
     }
 
-    // #[tracing::instrument(skip_all, ret, err)]
-    fn OnKeyDown(&self, ctx: Ref<'_, ITfContext>, wparam: WPARAM, _: LPARAM) -> Result<BOOL> {
+    #[tracing::instrument(skip_all, ret, err)]
+    fn OnKeyDown(&self, ctx: Ref<'_, ITfContext>, wparam: WPARAM, lparam: LPARAM) -> Result<BOOL> {
         if self.is_keyboard_disabled() {
             return Ok(FALSE);
         }
 
         let class = KeyClass::classify(wparam.0 as _);
         if class == KeyClass::Delimiter {
-            self.finish_composition()?;
-            return Ok(FALSE);
+            self.finish_composition(ctx.as_ref())?;
+
+            let ki = KEYBDINPUT {
+                wVk: VIRTUAL_KEY(wparam.0 as _),
+                wScan: ((lparam.0 as usize >> 16) as _),
+                dwFlags: KEYBD_EVENT_FLAGS::default(),
+                time: 0,
+                dwExtraInfo: 0,
+            };
+            let simulated_inputs = [
+                INPUT {
+                    r#type: INPUT_KEYBOARD,
+                    Anonymous: INPUT_0 { ki },
+                },
+                INPUT {
+                    r#type: INPUT_KEYBOARD,
+                    Anonymous: INPUT_0 {
+                        ki: KEYBDINPUT {
+                            dwFlags: KEYEVENTF_KEYUP,
+                            ..ki
+                        },
+                    },
+                },
+            ];
+
+            unsafe { SendInput(&simulated_inputs, std::mem::size_of::<INPUT>() as _) };
+
+            return Ok(TRUE);
         }
         let class = if let KeyClass::NumPad(n) = class
             && n != b'.'

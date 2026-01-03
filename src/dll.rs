@@ -11,7 +11,7 @@ use crate::*;
 static DLL_INSTANCE: AtomicPtr<std::ffi::c_void> = AtomicPtr::new(std::ptr::null_mut());
 static mut CS: CRITICAL_SECTION = unsafe { core::mem::zeroed() };
 
-pub(crate) fn instance_handle() -> HMODULE {
+fn instance_handle() -> HMODULE {
     HMODULE(DLL_INSTANCE.load(Relaxed))
 }
 

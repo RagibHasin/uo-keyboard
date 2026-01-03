@@ -229,7 +229,7 @@ impl Ime_Impl {
         let edit_session = edit_session.into_object();
         unsafe {
             ctx.RequestEditSession(
-                self.client_id(),
+                self.state().map_or(0, |s| s.client_id),
                 edit_session.as_interface(),
                 TF_ES_SYNC | TF_ES_READWRITE,
             )

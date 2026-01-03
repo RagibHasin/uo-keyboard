@@ -11,8 +11,8 @@ use crate::*;
 
 use globals::*;
 
-pub(crate) static DLL_REF_COUNT: AtomicI32 = AtomicI32::new(-1);
-pub(crate) static CLASS_FACTORY_OBJECT: Mutex<OnceLock<StaticComObject<ClassFactory>>> =
+static DLL_REF_COUNT: AtomicI32 = AtomicI32::new(-1);
+static CLASS_FACTORY_OBJECT: Mutex<OnceLock<StaticComObject<ClassFactory>>> =
     Mutex::new(OnceLock::new());
 
 pub(crate) fn dll_add_ref() {
@@ -27,7 +27,7 @@ pub(crate) fn dll_release() {
 
 #[implement(IClassFactory)]
 #[derive(Debug)]
-pub(crate) struct ClassFactory;
+struct ClassFactory;
 
 impl IClassFactory_Impl for ClassFactory_Impl {
     // #[tracing::instrument(skip_all, ret, err)]
@@ -60,17 +60,13 @@ impl IClassFactory_Impl for ClassFactory_Impl {
     }
 }
 
-pub(crate) fn free_global_objects() {
+fn free_global_objects() {
     CLASS_FACTORY_OBJECT.lock().unwrap().take();
 }
 
 #[unsafe(no_mangle)]
 #[expect(nonstandard_style, reason = "DLL export")]
-pub(crate) fn DllGetClassObject(
-    clsid: *const GUID,
-    iid: *const GUID,
-    object: *mut *mut c_void,
-) -> HRESULT {
+fn DllGetClassObject(clsid: *const GUID, iid: *const GUID, object: *mut *mut c_void) -> HRESULT {
     let lock = CLASS_FACTORY_OBJECT.lock().unwrap();
     let factory = lock.get_or_init(|| ClassFactory.into_static());
 
@@ -90,7 +86,7 @@ pub(crate) fn DllGetClassObject(
 
 #[unsafe(no_mangle)]
 #[expect(nonstandard_style, reason = "DLL export")]
-pub(crate) fn DllCanUnloadNow() -> HRESULT {
+fn DllCanUnloadNow() -> HRESULT {
     if DLL_REF_COUNT.load(Ordering::Relaxed) < 0 {
         S_OK
     } else {

@@ -4,13 +4,13 @@
 use crate::*;
 
 #[derive(Debug, Clone)]
-pub(crate) struct Compartment {
+struct Compartment {
     thread_mgr: ITfThreadMgr,
     guid: GUID,
 }
 
 impl Compartment {
-    pub(crate) fn new(thread_mgr: &ITfThreadMgr, guid: GUID) -> Compartment {
+    fn new(thread_mgr: &ITfThreadMgr, guid: GUID) -> Compartment {
         Compartment {
             thread_mgr: thread_mgr.clone(),
             guid,
@@ -24,13 +24,13 @@ impl Compartment {
     }
 
     // #[tracing::instrument(skip_all, ret, err)]
-    pub(crate) fn get_bool(&self) -> Result<bool> {
+    fn get_bool(&self) -> Result<bool> {
         // Variant itself directly supports booleans but Windows expects i32 for compartment.
         Ok(self.get_u32()? != 0)
     }
 
     // #[tracing::instrument(skip_all, ret, err)]
-    pub(crate) fn get_u32(&self) -> Result<u32> {
+    fn get_u32(&self) -> Result<u32> {
         unsafe {
             let variant = self.get_compartment()?.GetValue()?;
             // Windows expects i32 for compartment.

@@ -50,7 +50,7 @@ impl Ime_Impl {
 
 impl ActiveImeState {
     // #[tracing::instrument(skip_all, ret, err)]
-    pub(crate) fn destroy(self) -> Result<()> {
+    fn destroy(self) -> Result<()> {
         let Self {
             thread_mgr,
             client_id,

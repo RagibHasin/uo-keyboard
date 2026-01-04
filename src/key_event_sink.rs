@@ -4,7 +4,7 @@
 use crate::*;
 
 use key_class::KeyClass;
-use windows::Win32::UI::Input::KeyboardAndMouse::*;
+use windows::Win32::UI::{Input::KeyboardAndMouse::*, WindowsAndMessaging::GetMessageExtraInfo};
 
 impl Ime_Impl {
     // This theoretically makes sense, but a confirmation is needed whether a real
@@ -60,34 +60,40 @@ impl ITfKeyEventSink_Impl for Ime_Impl {
 
         let class = KeyClass::classify(wparam.0 as _);
         if class == KeyClass::Delimiter {
-            self.finish_composition(ctx.as_ref())?;
+            const SYNTH: usize = 0x746e7953;
 
-            let ki = KEYBDINPUT {
-                wVk: VIRTUAL_KEY(wparam.0 as _),
-                wScan: ((lparam.0 as usize >> 16) as _),
-                dwFlags: KEYBD_EVENT_FLAGS::default(),
-                time: 0,
-                dwExtraInfo: 0,
-            };
-            let simulated_inputs = [
-                INPUT {
-                    r#type: INPUT_KEYBOARD,
-                    Anonymous: INPUT_0 { ki },
-                },
-                INPUT {
-                    r#type: INPUT_KEYBOARD,
-                    Anonymous: INPUT_0 {
-                        ki: KEYBDINPUT {
-                            dwFlags: KEYEVENTF_KEYUP,
-                            ..ki
+            if unsafe { GetMessageExtraInfo() } != LPARAM(SYNTH as _) {
+                self.finish_composition(ctx.as_ref())?;
+
+                let ki = KEYBDINPUT {
+                    wVk: VIRTUAL_KEY(wparam.0 as _),
+                    wScan: ((lparam.0 as usize >> 16) as _),
+                    dwFlags: KEYBD_EVENT_FLAGS::default(),
+                    time: 0,
+                    dwExtraInfo: SYNTH,
+                };
+                let simulated_inputs = [
+                    INPUT {
+                        r#type: INPUT_KEYBOARD,
+                        Anonymous: INPUT_0 { ki },
+                    },
+                    INPUT {
+                        r#type: INPUT_KEYBOARD,
+                        Anonymous: INPUT_0 {
+                            ki: KEYBDINPUT {
+                                dwFlags: KEYEVENTF_KEYUP,
+                                ..ki
+                            },
                         },
                     },
-                },
-            ];
+                ];
 
-            unsafe { SendInput(&simulated_inputs, std::mem::size_of::<INPUT>() as _) };
+                unsafe { SendInput(&simulated_inputs, std::mem::size_of::<INPUT>() as _) };
 
-            return Ok(TRUE);
+                return Ok(TRUE);
+            }
+
+            return Ok(FALSE);
         }
         let class = if let KeyClass::NumPad(n) = class
             && n != b'.'

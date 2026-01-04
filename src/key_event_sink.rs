@@ -10,7 +10,7 @@ impl Ime_Impl {
     // This theoretically makes sense, but a confirmation is needed whether a real
     // world situation exists where this becomes true.
     // #[tracing::instrument(skip_all, ret)]
-    pub(crate) fn is_keyboard_disabled(&self) -> bool {
+    fn is_keyboard_disabled(&self) -> bool {
         let state = self.state().unwrap();
 
         unsafe { state.thread_mgr.GetFocus() }.is_ok_and(|m| unsafe { m.GetTop() }.is_err())

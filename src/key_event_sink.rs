@@ -105,7 +105,7 @@ impl ITfKeyEventSink_Impl for Ime_Impl {
 
         let is_composing = self.composition().is_some();
         let is_eaten = match class {
-            KeyClass::Modifier => FALSE,
+            KeyClass::Modifier | KeyClass::Navigation => FALSE,
             KeyClass::Unprocessed(_) | KeyClass::Backspace if !is_composing => FALSE,
             KeyClass::FreeConvertible(ch) if !is_composing => {
                 self.add_single_char(ctx.unwrap(), ch)?;

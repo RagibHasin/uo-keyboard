@@ -11,12 +11,13 @@ pub(crate) enum KeyClass {
     Unprocessed(u8),
     Backspace,
     Delimiter,
+    Navigation,
     Modifier,
 }
 
 impl KeyClass {
     #[tracing::instrument(ret)]
-    pub(crate) fn classify(key: u16) -> KeyClass {
+    pub(crate) fn classify(key: u16) -> Self {
         let caps_locked = unsafe { GetKeyState(VK_CAPITAL.0 as _) } & 1 == 1;
         let shifted = unsafe { GetAsyncKeyState(VK_SHIFT.0 as _) } & i16::MIN == i16::MIN;
         let ctrled = unsafe { GetAsyncKeyState(VK_CONTROL.0 as _) } & i16::MIN == i16::MIN;
@@ -28,7 +29,12 @@ impl KeyClass {
 
         tracing::trace!(caps_locked, shifted, ctrled, alted, metaed, ch);
 
-        if ctrled
+        if [VK_LEFT, VK_RIGHT, VK_UP, VK_DOWN, VK_HOME, VK_END]
+            .into_iter()
+            .any(|vk| key == vk.0)
+        {
+            Self::Navigation
+        } else if ctrled
             || alted
             || metaed
             || [
@@ -47,16 +53,16 @@ impl KeyClass {
             .into_iter()
             .any(|vk| key == vk.0)
         {
-            KeyClass::Modifier
+            Self::Modifier
         } else if (VK_A.0..=VK_Z.0).contains(&key) {
             let ch = key as u8;
-            KeyClass::CompositeConvertible(if caps_locked || shifted {
+            Self::CompositeConvertible(if caps_locked || shifted {
                 ch
             } else {
                 ch.to_ascii_lowercase()
             })
         } else if (VK_0.0..=VK_9.0).contains(&key) {
-            KeyClass::FreeConvertible(match (shifted, key as u8) {
+            Self::FreeConvertible(match (shifted, key as u8) {
                 (true, b'1') => b'!',
                 (true, b'2') => b'@',
                 (true, b'3') => b'#',
@@ -70,19 +76,19 @@ impl KeyClass {
                 (_, ch) => ch,
             })
         } else if key == VK_OEM_PERIOD.0 {
-            KeyClass::FreeConvertible(b'.')
+            Self::FreeConvertible(b'.')
         } else if (VK_NUMPAD0.0..=VK_NUMPAD9.0).contains(&key) {
-            KeyClass::NumPad((key - VK_NUMPAD0.0) as u8 + b'0')
+            Self::NumPad((key - VK_NUMPAD0.0) as u8 + b'0')
         } else if key == VK_DECIMAL.0 {
-            KeyClass::NumPad(b'.')
+            Self::NumPad(b'.')
         } else if key == VK_TAB.0 || key == VK_SPACE.0 || key == VK_RETURN.0 {
-            KeyClass::Delimiter
+            Self::Delimiter
         } else if key == VK_BACK.0 {
-            KeyClass::Backspace
+            Self::Backspace
         } else {
             match ch {
-                0 => KeyClass::Delimiter,
-                _ => KeyClass::Unprocessed(ch as _),
+                0 => Self::Delimiter,
+                _ => Self::Unprocessed(ch as _),
             }
         }
     }

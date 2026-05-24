@@ -39,3 +39,5 @@ winres = "0.1.12"
 
 [profile.release]
 debug = true
+lto = true
+opt-level = 3

@@ -19,6 +19,9 @@ VIAddVersionKey "FileDescription" "Uo Keyboard Installer"
 VIAddVersionKey "LegalCopyright" "© 2026 Muhammad Ragib Hasin"
 
 ; --- MARK: MUI Settings
+ManifestDPIAware true
+Unicode true
+
 !define MUI_ABORTWARNING
 !define MUI_ICON "resources/IME.ico"
 !define MUI_UNICON "resources/IME.ico"
@@ -36,6 +39,14 @@ VIAddVersionKey "LegalCopyright" "© 2026 Muhammad Ragib Hasin"
 
 !insertmacro MUI_LANGUAGE "English"
 
+Function .onInit
+	${If} ${IsNativeIA32}
+		StrCpy $INSTDIR "$PROGRAMFILES\Uo Keyboard"
+	${Else}
+		StrCpy $INSTDIR "$PROGRAMFILES64\Uo Keyboard"
+	${EndIf}
+FunctionEnd
+
 ; --- MARK: INSTALL
 Section "Install" SEC_MAIN
 
@@ -43,9 +54,10 @@ Section "Install" SEC_MAIN
 
 	!insertmacro InstallLib REGDLL NOTSHARED REBOOT_NOTPROTECTED "target\i686-pc-windows-msvc\release\uo_keyboard.dll" "$INSTDIR\uo_keyboard_x86.dll" "$INSTDIR"
 
-	IfErrors 0 +2
+	IfErrors 0 continue_after_x86
 	Abort "Failed to register x86 IME DLL."
 
+	continue_after_x86:
 	File "/oname=uo_keyboard_x86.pdb" "target\i686-pc-windows-msvc\release\uo_keyboard.pdb"
 
 	${If} ${RunningX64}
@@ -53,11 +65,12 @@ Section "Install" SEC_MAIN
 		!define LIBRARY_X64
 		!insertmacro InstallLib REGDLL NOTSHARED REBOOT_NOTPROTECTED "target\release\uo_keyboard.dll" "$INSTDIR\uo_keyboard_amd64.dll" "$INSTDIR"
 
-		IfErrors 0 +4
+		IfErrors 0 continue_after_amd64
 		!undef LIBRARY_X64
 		!insertmacro UnInstallLib REGDLL NOTSHARED REBOOT_NOTPROTECTED "target\i686-pc-windows-msvc\release\uo_keyboard.dll"
 		Abort "Failed to register amd64 IME DLL."
 
+		continue_after_amd64:
 		File "/oname=uo_keyboard_amd64.pdb" "target\release\uo_keyboard.pdb"
 
 	${EndIf}
@@ -80,9 +93,10 @@ Section "Uninstall"
 
 	!insertmacro UnInstallLib REGDLL NOTSHARED REBOOT_NOTPROTECTED "uo_keyboard_x86.dll"
 
-	IfErrors 0 +2
+	IfErrors 0 continue_after_x86
 	Abort "Failed to unregister x86 IME DLL."
 
+	continue_after_x86:
 	Delete "uo_keyboard_x86.pdb"
 
 	${If} ${RunningX64}
@@ -91,11 +105,12 @@ Section "Uninstall"
 
 		!insertmacro UnInstallLib REGDLL NOTSHARED REBOOT_NOTPROTECTED "uo_keyboard_amd64.dll"
 
-		IfErrors 0 +4
+		IfErrors 0 continue_after_amd64
 		!undef LIBRARY_X64
 		!insertmacro UnInstallLib REGDLL NOTSHARED REBOOT_NOTPROTECTED "uo_keyboard_x86.dll"
 		Abort "Failed to unregister amd64 IME DLL."
 
+		continue_after_amd64:
 		Delete "uo_keyboard_amd64.pdb"
 
 	${EndIf}

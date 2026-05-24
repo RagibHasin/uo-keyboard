@@ -13,7 +13,7 @@ tracing = "0.1.44"
 tracing-appender = "0.2.5"
 tracing-etw = "0.2.3"
 tracing-panic = "0.1.2"
-tracing-subscriber = { version = "0.3.22", features = ["env-filter", "json"] }
+tracing-subscriber = { version = "0.3.23", features = ["env-filter", "json"] }
 windows = { version = "0.62.2", features = [
   "Win32_Foundation",
   "Win32_Graphics",

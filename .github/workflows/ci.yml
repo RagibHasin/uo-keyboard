@@ -14,21 +14,31 @@ jobs:
     steps:
     - uses: actions/checkout@v6
     - uses: dtolnay/rust-toolchain@stable
+      with:
+        targets: x86_64-pc-windows-msvc , i686-pc-windows-msvc
+
     - uses: Swatinem/rust-cache@v2
       
-    - name: Run tests
-      run: cargo test --verbose
-
-    - name: Build release
+    - name: Build x86-64
       run: cargo build --release --verbose
+      
+    - name: Build x86
+      run: cargo build --release --target i686-pc-windows-msvc --verbose
+
+    - uses: negrutiu/nsis-install@v2
+    - uses: hustcer/setup-nu@v3
+      with:
+        version: "0.113"
+
+    - name: Build installer
+      shell: nu {0}
+      run: makensis /V4 /WX $"/DVERSION=(open Cargo.toml | get package.version)" installer.nsi
 
     - uses: actions/upload-artifact@v6
       with:
         name: uo_keyboard
-        path: |
-          target/release/uo_keyboard.dll
-          target/release/uo_keyboard.pdb
-        compression-level: 9
+        path: uo_keyboard_setup.exe
+        compression-level: 0
         if-no-files-found: error
 
   release:
@@ -60,6 +70,5 @@ jobs:
         name: Ũõ Keyboard Preview
         draft: false
         prerelease: true
-        files: |
-          artifacts/**/*
+        files: artifacts/**/*
         

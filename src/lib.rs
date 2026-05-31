@@ -37,7 +37,7 @@ struct Ime {
     state: RefCell<Option<ActiveImeState>>,
     last_focused: RefCell<Option<ITfDocumentMgr>>,
 
-    converter: rupantor::avro::AvroPhonetic,
+    converter: okkhor::parser::Parser,
 }
 
 #[derive(Debug)]
@@ -64,7 +64,7 @@ impl Ime {
             state: None.into(),
             last_focused: None.into(),
 
-            converter: rupantor::avro::AvroPhonetic::new(),
+            converter: okkhor::parser::Parser::new_phonetic(),
         })
     }
 

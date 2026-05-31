@@ -4,13 +4,12 @@ A Windows Text Service Framework based IME for Bangla language implementing [Avr
 
 Code is loosely based on the [sample IME from Windows classic samples](https://github.com/microsoft/Windows-classic-samples/blob/main/Samples/IME/) and its partial [Rust port](https://github.com/saschanaz/ime-rs).
 
-Phonetic translation uses another fantastic open-source project [`rupantor`](https://github.com/OpenBangla/rupantor-rs).
+Phonetic translation uses another fantastic open-source project [`okkhor`](https://github.com/gulshan/okkhor/).
 
 ## How to use
 
-1. Download `uo_keyboard.dll` from the [latest](https://github.com/RagibHasin/uo-keyboard/releases) release.
-2. Run `regsvr32 uo_keyboard.dll` from an elevated terminal.
-3. Press <kbd>⊞ + Space</kbd> to cycle through IMEs.
+1. Download and install `uo_keyboard_setup_*.exe` from the [latest](https://github.com/RagibHasin/uo-keyboard/releases) release.
+2. Press <kbd>⊞ + Space</kbd> to cycle through IMEs.
 
 ## License
 

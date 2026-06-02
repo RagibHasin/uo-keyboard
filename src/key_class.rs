@@ -1,9 +1,7 @@
 // Copyright 2026 Muhammad Ragib Hasin
 // SPDX-License-Identifier: MPL-2.0
 
-use windows::Win32::Foundation::*;
 use windows::Win32::UI::Input::KeyboardAndMouse::*;
-use windows::core::*;
 
 #[derive(Debug, Clone, Copy, PartialEq, Eq)]
 pub(crate) enum KeyClass {
@@ -138,31 +136,6 @@ fn is_key_in_range(key: u16, start: VIRTUAL_KEY, end: VIRTUAL_KEY) -> bool {
 
 pub(crate) fn is_active(key: VIRTUAL_KEY) -> bool {
     (unsafe { GetAsyncKeyState(key.0 as _) } & i16::MIN == i16::MIN)
-}
-
-pub(crate) fn convert_vkey(code: u32) -> Result<u8> {
-    let scan_code = unsafe { MapVirtualKeyW(code, MAPVK_VK_TO_VSC) };
-
-    let mut keyboard_state = [0u8; 256];
-    unsafe { GetKeyboardState(&mut keyboard_state) }?;
-
-    let layout = unsafe { GetKeyboardLayout(0) };
-
-    let mut ch = 0;
-    let count = unsafe {
-        ToUnicodeEx(
-            code,
-            scan_code,
-            &keyboard_state,
-            std::slice::from_mut(&mut ch),
-            0,
-            Some(layout),
-        )
-    };
-
-    tracing::trace!(ch, wch = %(ch as u8 as char));
-
-    (count == 1).then_some(ch as _).ok_or(S_FALSE.into())
 }
 
 fn matches_key(key: u16, keys: &[VIRTUAL_KEY]) -> bool {

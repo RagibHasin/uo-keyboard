@@ -3,7 +3,7 @@
 
 use crate::*;
 
-use key_class::{KeyAction, convert_vkey, is_active};
+use key_class::{KeyAction, is_active};
 use windows::Win32::UI::{Input::KeyboardAndMouse::*, WindowsAndMessaging::GetMessageExtraInfo};
 
 const SYNTH: usize = 0x746e7953;
@@ -103,6 +103,31 @@ impl ITfKeyEventSink_Impl for Ime_Impl {
     }
 }
 
+fn convert_vkey(code: u32) -> Result<u8> {
+    let scan_code = unsafe { MapVirtualKeyW(code, MAPVK_VK_TO_VSC) };
+
+    let mut keyboard_state = [0u8; 256];
+    unsafe { GetKeyboardState(&mut keyboard_state) }?;
+
+    let layout = unsafe { GetKeyboardLayout(0) };
+
+    let mut ch = 0;
+    let count = unsafe {
+        ToUnicodeEx(
+            code,
+            scan_code,
+            &keyboard_state,
+            std::slice::from_mut(&mut ch),
+            0,
+            Some(layout),
+        )
+    };
+
+    tracing::trace!(ch, wch = %(ch as u8 as char));
+
+    (count == 1).then_some(ch as _).ok_or(S_FALSE.into())
+}
+
 #[tracing::instrument]
 fn synthesize_key_input(wparam: WPARAM, lparam: LPARAM) {
     let shifted = is_active(VK_SHIFT);
@@ -131,7 +156,7 @@ fn synthesize_key_input(wparam: WPARAM, lparam: LPARAM) {
             KEYEVENTF_KEYUP,
         ),
     ];
-    let keys =
+    let _keys =
         modifiers
             .into_iter()
             .filter_map(|(is_active, key)| {

@@ -6,9 +6,8 @@ use windows::Win32::UI::Input::KeyboardAndMouse::*;
 #[derive(Debug, Clone, Copy, PartialEq, Eq)]
 pub(crate) enum KeyClass {
     Letter,
-    NumRow,
-    NumPad,
     Symbol,
+    NumPad,
     Terminator,
     Backspace,
     Decimal,
@@ -52,19 +51,17 @@ const TERMINATOR_KEYS: &[VIRTUAL_KEY] = &[
 ];
 
 impl KeyClass {
-    pub(crate) fn classify(key: u16) -> Self {
+    fn classify(key: u16) -> Self {
         if key == VK_BACK.0 {
             Self::Backspace
         } else if key == VK_DECIMAL.0 {
             Self::Decimal
         } else if is_key_in_range(key, VK_NUMPAD0, VK_NUMPAD9) {
             Self::NumPad
-        } else if is_key_in_range(key, VK_0, VK_9) {
-            Self::NumRow
+        } else if is_key_in_range(key, VK_0, VK_9) || matches_key(key, SYMBOL_KEYS) {
+            Self::Symbol
         } else if is_key_in_range(key, VK_A, VK_Z) {
             Self::Letter
-        } else if matches_key(key, SYMBOL_KEYS) {
-            Self::Symbol
         } else if matches_key(key, TERMINATOR_KEYS) {
             Self::Terminator
         } else {
@@ -104,14 +101,9 @@ impl KeyAction {
             (Letter, Other, _) => Self::Pass,
             (Letter, None | Shift, _) => Self::Append,
 
-            (Symbol, _, false) => Self::Pass,
-            (Symbol, Other, true) => Self::Pass,
+            (Symbol, None | Shift, false) => Self::OneShot,
             (Symbol, None | Shift, true) => Self::Append,
-
-            (NumRow, None, false) => Self::OneShot,
-            (NumRow, Shift | Other, false) => Self::Pass,
-            (NumRow, Other, true) => Self::Pass,
-            (NumRow, None | Shift, true) => Self::Append,
+            (Symbol, Other, _) => Self::Pass,
 
             (NumPad, None, false) => Self::OneShot,
             (NumPad, None, true) => Self::Append,

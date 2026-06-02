@@ -220,6 +220,21 @@ impl ITfEditSession_Impl for FinishEditSession_Impl {
     }
 }
 
+#[implement(ITfEditSession)]
+#[derive(Debug)]
+struct CancelEditSession {
+    base: EditSession,
+}
+
+impl ITfEditSession_Impl for CancelEditSession_Impl {
+    // #[tracing::instrument(skip_all, ret, err)]
+    fn DoEditSession(&self, edit_cookie: u32) -> Result<()> {
+        self.base.ime.composition_mut().unwrap().input.clear();
+        self.base.update_composition(edit_cookie)?;
+        self.base.terminate_composition(edit_cookie)
+    }
+}
+
 impl Ime_Impl {
     fn request_edit_session(
         &self,
@@ -282,6 +297,16 @@ impl Ime_Impl {
             &ctx,
             FinishEditSession {
                 base: EditSession::new(self, &ctx),
+            },
+        )
+    }
+
+    #[tracing::instrument(skip_all, ret, err)]
+    pub(crate) fn cancel_composition(&self, ctx: &ITfContext) -> Result<()> {
+        self.request_edit_session(
+            ctx,
+            CancelEditSession {
+                base: EditSession::new(self, ctx),
             },
         )
     }

@@ -30,7 +30,7 @@ pub(crate) fn dll_release() {
 struct ClassFactory;
 
 impl IClassFactory_Impl for ClassFactory_Impl {
-    // #[tracing::instrument(skip_all, ret, err)]
+    #[tracing::instrument(skip_all, ret, err)]
     fn CreateInstance(
         &self,
         outer: Ref<'_, IUnknown>,
@@ -67,15 +67,18 @@ fn free_global_objects() {
 #[unsafe(no_mangle)]
 #[expect(nonstandard_style, reason = "DLL export")]
 fn DllGetClassObject(clsid: *const GUID, iid: *const GUID, object: *mut *mut c_void) -> HRESULT {
-    let lock = CLASS_FACTORY_OBJECT.lock().unwrap();
-    let factory = lock.get_or_init(|| ClassFactory.into_static());
+    let Some(clsid) = (unsafe { clsid.as_ref() }) else {
+        return E_INVALIDARG;
+    };
+    let Some(iid) = (unsafe { iid.as_ref() }) else {
+        return E_INVALIDARG;
+    };
 
-    let clsid = unsafe { clsid.as_ref() }.unwrap();
-    let iid = unsafe { iid.as_ref() }.unwrap();
-
-    if (iid == &IClassFactory::IID || iid == &IUnknown::IID) && clsid == &IME_CLSID {
+    if (*iid == IClassFactory::IID || *iid == IUnknown::IID) && *clsid == IME_CLSID {
+        let lock = CLASS_FACTORY_OBJECT.lock().unwrap();
+        let factory = lock.get_or_init(|| ClassFactory.into_static());
         let factory = factory.as_interface::<IClassFactory>().to_owned();
-        unsafe { object.write(std::mem::transmute::<IClassFactory, *mut c_void>(factory)) };
+        unsafe { object.write(factory.into_raw()) };
         dll_add_ref(); // class factory holds DLL ref count
         S_OK
     } else {

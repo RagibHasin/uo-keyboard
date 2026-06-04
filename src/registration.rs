@@ -1,11 +1,7 @@
 // Copyright 2026 Muhammad Ragib Hasin
 // SPDX-License-Identifier: MPL-2.0
 
-use windows::Win32::{
-    Foundation::{HMODULE, MAX_PATH},
-    System::LibraryLoader::GetModuleFileNameW,
-    UI::Input::KeyboardAndMouse::HKL,
-};
+use windows::Win32::{System::LibraryLoader::GetModuleFileNameW, UI::Input::KeyboardAndMouse::HKL};
 
 use crate::*;
 
@@ -59,7 +55,7 @@ pub(crate) fn unregister_profile() -> Result<()> {
     Ok(())
 }
 
-const SUPPORT_CATEGORIES: [GUID; 8] = [
+const SUPPORT_CATEGORIES: &[GUID] = &[
     GUID_TFCAT_TIP_KEYBOARD,
     GUID_TFCAT_DISPLAYATTRIBUTEPROVIDER,
     GUID_TFCAT_TIPCAP_UIELEMENTENABLED,
@@ -70,17 +66,17 @@ const SUPPORT_CATEGORIES: [GUID; 8] = [
     GUID_TFCAT_TIPCAP_SYSTRAYSUPPORT,
 ];
 
-pub(crate) fn register_categories() -> windows::core::Result<()> {
+pub(crate) fn register_categories() -> Result<()> {
     let mgr = utils::create_instance_inproc::<ITfCategoryMgr>(&CLSID_TF_CategoryMgr)?;
 
     for guid in SUPPORT_CATEGORIES {
-        unsafe { mgr.RegisterCategory(&globals::IME_CLSID, &guid, &globals::IME_CLSID) }?;
+        unsafe { mgr.RegisterCategory(&globals::IME_CLSID, guid, &globals::IME_CLSID) }?;
     }
 
     Ok(())
 }
 
-pub(crate) fn unregister_categories() -> windows::core::Result<()> {
+pub(crate) fn unregister_categories() -> Result<()> {
     let mgr = utils::create_instance_inproc::<ITfCategoryMgr>(&CLSID_TF_CategoryMgr)?;
 
     for guid in SUPPORT_CATEGORIES {

@@ -4,7 +4,7 @@
 use crate::*;
 
 impl Ime_Impl {
-    // #[tracing::instrument(skip_all, ret, err)]
+    #[tracing::instrument(skip_all, err)]
     fn activate(
         &self,
         thread_mgr: Ref<'_, ITfThreadMgr>,
@@ -49,7 +49,7 @@ impl Ime_Impl {
 }
 
 impl ActiveImeState {
-    // #[tracing::instrument(skip_all, ret, err)]
+    #[tracing::instrument(skip_all, err)]
     fn destroy(self) -> Result<()> {
         let Self {
             thread_mgr,

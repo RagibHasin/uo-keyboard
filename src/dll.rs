@@ -9,7 +9,7 @@ use windows::Win32::System::{SystemServices::*, Threading::*};
 use crate::*;
 
 static DLL_INSTANCE: AtomicPtr<std::ffi::c_void> = AtomicPtr::new(std::ptr::null_mut());
-static mut CS: CRITICAL_SECTION = unsafe { core::mem::zeroed() };
+static mut CS: CRITICAL_SECTION = unsafe { std::mem::zeroed() };
 
 fn instance_handle() -> HMODULE {
     HMODULE(DLL_INSTANCE.load(Relaxed))
@@ -55,7 +55,7 @@ unsafe extern "system" fn DllUnregisterServer() -> HRESULT {
 unsafe extern "system" fn DllMain(
     instance: HINSTANCE,
     reason: u32,
-    _lpv_reserved: *mut core::ffi::c_void,
+    _lpv_reserved: *mut std::ffi::c_void,
 ) -> BOOL {
     match reason {
         DLL_PROCESS_ATTACH => {

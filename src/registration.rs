@@ -18,22 +18,35 @@ pub(crate) fn register_profile(dll_instance_handle: HMODULE) -> Result<()> {
     )?;
 
     let icon_file_name = get_module_file_name(dll_instance_handle);
-    let description = globals::IME_DESCRIPTION.encode_utf16().collect::<Vec<_>>();
 
-    unsafe {
-        profile_manager.RegisterProfile(
-            &globals::IME_CLSID,
-            globals::IME_LANGID,
-            &globals::IME_PROFILE,
-            &description,
-            &icon_file_name,
-            globals::IME_ICON_INDEX,
-            HKL::default(),
-            0,
-            true,
-            0,
-        )
-    }?;
+    for (guid, description, icon_index) in [
+        (
+            globals::IME_PROFILE_AVRO,
+            globals::IME_PROFILE_DESCRIPTION_AVRO,
+            globals::IME_ICON_INDEX_AVRO,
+        ),
+        (
+            globals::IME_PROFILE_KHIPRO,
+            globals::IME_PROFILE_DESCRIPTION_KHIPRO,
+            globals::IME_ICON_INDEX_KHIPRO,
+        ),
+    ] {
+        let description = description.encode_utf16().collect::<Vec<_>>();
+        unsafe {
+            profile_manager.RegisterProfile(
+                &globals::IME_CLSID,
+                globals::IME_LANGID,
+                &guid,
+                &description,
+                &icon_file_name,
+                icon_index,
+                HKL::default(),
+                0,
+                true,
+                0,
+            )
+        }?;
+    }
 
     Ok(())
 }
@@ -43,21 +56,17 @@ pub(crate) fn unregister_profile() -> Result<()> {
         &CLSID_TF_InputProcessorProfiles,
     )?;
 
-    unsafe {
-        profile_manager.UnregisterProfile(
-            &globals::IME_CLSID,
-            globals::IME_LANGID,
-            &globals::IME_PROFILE,
-            0,
-        )
-    }?;
+    for guid in [globals::IME_PROFILE_AVRO, globals::IME_PROFILE_KHIPRO] {
+        unsafe {
+            profile_manager.UnregisterProfile(&globals::IME_CLSID, globals::IME_LANGID, &guid, 0)
+        }?;
+    }
 
     Ok(())
 }
 
 const SUPPORT_CATEGORIES: &[GUID] = &[
     GUID_TFCAT_TIP_KEYBOARD,
-    GUID_TFCAT_DISPLAYATTRIBUTEPROVIDER,
     GUID_TFCAT_TIPCAP_UIELEMENTENABLED,
     GUID_TFCAT_TIPCAP_SECUREMODE,
     GUID_TFCAT_TIPCAP_COMLESS,
@@ -80,7 +89,7 @@ pub(crate) fn unregister_categories() -> Result<()> {
     let mgr = utils::create_instance_inproc::<ITfCategoryMgr>(&CLSID_TF_CategoryMgr)?;
 
     for guid in SUPPORT_CATEGORIES {
-        unsafe { mgr.UnregisterCategory(&globals::IME_CLSID, &guid, &globals::IME_CLSID) }?;
+        unsafe { mgr.UnregisterCategory(&globals::IME_CLSID, guid, &globals::IME_CLSID) }?;
     }
 
     Ok(())

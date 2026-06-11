@@ -88,7 +88,12 @@ impl EditSession {
     fn update_composition(&self, edit_cookie: u32) -> Result<()> {
         let composition = self.ime.composition().unwrap();
 
-        let converted = self.ime.converter.convert(&composition.input);
+        let converted = self
+            .ime
+            .state()
+            .unwrap()
+            .transcriber
+            .convert(&composition.input);
         tracing::trace!(composition.input, converted);
 
         let encoded = converted.encode_utf16().collect::<Vec<_>>();
@@ -148,7 +153,7 @@ impl ITfEditSession_Impl for AddSingleEditSession_Impl {
         let ctx = &self.base.ctx;
 
         let input = std::str::from_utf8(std::slice::from_ref(&self.ch)).unwrap();
-        let converted = self.base.ime.converter.convert(input);
+        let converted = self.base.ime.state().unwrap().transcriber.convert(input);
         tracing::trace!(input, converted);
 
         let encoded = converted.encode_utf16().collect::<Vec<_>>();
@@ -174,13 +179,14 @@ impl ITfEditSession_Impl for AppendEditSession_Impl {
     // #[tracing::instrument(skip_all, ret, err)]
     fn DoEditSession(&self, edit_cookie: u32) -> Result<()> {
         self.base.start_composition(edit_cookie)?;
-        self.base
+        let ch = self
+            .base
             .ime
-            .composition_mut()
+            .state()
             .unwrap()
-            .input
-            .push(self.ch as _);
-
+            .transcriber
+            .adapt_char(self.ch);
+        self.base.ime.composition_mut().unwrap().input.push(ch);
         self.base.update_composition(edit_cookie)
     }
 }

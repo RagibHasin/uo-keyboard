@@ -7,6 +7,7 @@ use windows::Win32::{Foundation::*, UI::TextServices::*};
 use windows::core::*;
 
 mod utils;
+mod transcriber;
 
 mod globals;
 
@@ -14,6 +15,7 @@ mod dll;
 mod factory;
 mod registration;
 
+mod active_profile_notify_sink;
 mod compartment;
 mod edit_session;
 mod function_provider;
@@ -28,16 +30,16 @@ mod text_input_processor;
     ITfTextEditSink,
     ITfKeyEventSink,
     ITfCompositionSink,
+    ITfActiveLanguageProfileNotifySink,
     ITfThreadFocusSink,
     ITfFunctionProvider,
     ITfFunction,
     ITfFnGetPreferredTouchKeyboardLayout
 )]
+#[derive(Debug)]
 struct Ime {
     state: RefCell<Option<ActiveImeState>>,
     last_focused: RefCell<Option<ITfDocumentMgr>>,
-
-    converter: okkhor::parser::Parser,
 }
 
 #[derive(Debug)]
@@ -50,21 +52,22 @@ struct ActiveImeState {
     text_edit_ctx: Option<ITfContext>,
     text_edit_sink_cookie: u32,
 
+    active_profile_notify_sink_cookie: u32,
+
     thread_focus_sink_cookie: u32,
 
+    transcriber: transcriber::Transcriber,
     composition: Option<edit_session::Composition>,
 }
 
 impl Ime {
-    // #[tracing::instrument(skip_all, ret, err)]
+    #[tracing::instrument(ret, err)]
     fn new() -> Result<Self> {
         factory::dll_add_ref();
 
         Ok(Ime {
             state: None.into(),
             last_focused: None.into(),
-
-            converter: okkhor::parser::Parser::new_phonetic(),
         })
     }
 
@@ -94,15 +97,5 @@ impl Ime {
 impl Drop for Ime {
     fn drop(&mut self) {
         factory::dll_release();
-    }
-}
-
-impl core::fmt::Debug for Ime {
-    fn fmt(&self, f: &mut core::fmt::Formatter) -> core::fmt::Result {
-        f.debug_struct("Ime")
-            .field("state", &self.state)
-            .field("last_focused", &self.last_focused)
-            .field("converter", &"<converter>")
-            .finish()
     }
 }

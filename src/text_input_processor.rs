@@ -10,6 +10,16 @@ impl Ime_Impl {
         thread_mgr: Ref<'_, ITfThreadMgr>,
         client_id: u32,
     ) -> Result<ActiveImeState> {
+        tracing::trace!("activate IME");
+        let profile_manager = utils::create_instance_inproc::<ITfInputProcessorProfileMgr>(
+            &CLSID_TF_InputProcessorProfiles,
+        )?;
+
+        let mut active_profile = TF_INPUTPROCESSORPROFILE::default();
+        unsafe { profile_manager.GetActiveProfile(&GUID_TFCAT_TIP_KEYBOARD, &mut active_profile) }?;
+
+        let transcriber = transcriber::Transcriber::new(active_profile.guidProfile);
+
         let thread_mgr = thread_mgr.ok()?.clone();
         let source = thread_mgr.cast::<ITfSource>()?;
 
@@ -23,6 +33,13 @@ impl Ime_Impl {
 
         let keystroke_mgr = thread_mgr.cast::<ITfKeystrokeMgr>()?;
         unsafe { keystroke_mgr.AdviseKeyEventSink(client_id, self.as_interface(), true) }?;
+
+        let active_profile_notify_sink_cookie = unsafe {
+            source.AdviseSink(
+                &ITfActiveLanguageProfileNotifySink::IID,
+                self.as_interface(),
+            )
+        }?;
 
         let thread_focus_sink_cookie =
             unsafe { source.AdviseSink(&ITfThreadFocusSink::IID, self.as_interface()) }?;
@@ -42,7 +59,9 @@ impl Ime_Impl {
             thread_mgr_event_sink_cookie,
             text_edit_ctx: Some(text_edit_ctx),
             text_edit_sink_cookie,
+            active_profile_notify_sink_cookie,
             thread_focus_sink_cookie,
+            transcriber,
             composition: None,
         })
     }
@@ -55,6 +74,7 @@ impl ActiveImeState {
             thread_mgr,
             client_id,
             thread_mgr_event_sink_cookie,
+            active_profile_notify_sink_cookie,
             thread_focus_sink_cookie,
             ..
         } = self;
@@ -65,6 +85,7 @@ impl ActiveImeState {
         let source = thread_mgr.cast::<ITfSource>()?;
 
         unsafe { source.UnadviseSink(thread_focus_sink_cookie) }?;
+        unsafe { source.UnadviseSink(active_profile_notify_sink_cookie) }?;
 
         let keystroke_mgr = thread_mgr.cast::<ITfKeystrokeMgr>()?;
         unsafe { keystroke_mgr.UnadviseKeyEventSink(client_id) }?;
@@ -96,6 +117,7 @@ impl ITfTextInputProcessor_Impl for Ime_Impl {
 impl ITfTextInputProcessorEx_Impl for Ime_Impl {
     // #[tracing::instrument(skip_all, ret, err)]
     fn ActivateEx(&self, thread_mgr: Ref<'_, ITfThreadMgr>, client_id: u32, _: u32) -> Result<()> {
+        tracing::trace!("ITfTextInputProcessorEx::ActivateEx IME");
         if let Ok(state) = self.activate(thread_mgr, client_id) {
             self.state.replace(Some(state));
             Ok(())

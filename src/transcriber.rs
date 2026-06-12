@@ -45,4 +45,11 @@ impl Transcriber {
             Transcriber::Khipro(_) => ch.to_ascii_lowercase() as _,
         }
     }
+
+    pub(crate) fn dot_trailer(&self) -> u8 {
+        match self {
+            Transcriber::Avro(_) => b'`',
+            Transcriber::Khipro(_) => b'.',
+        }
+    }
 }

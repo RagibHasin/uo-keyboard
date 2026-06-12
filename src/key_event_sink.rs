@@ -84,7 +84,9 @@ impl ITfKeyEventSink_Impl for Ime_Impl {
                 }
                 (KeyAction::AppendDot, _) => {
                     self.append_char_to_composition(ctx.unwrap(), b'.')?;
-                    self.append_char_to_composition(ctx.unwrap(), b'`')?;
+
+                    let trailer = self.state().unwrap().transcriber.dot_trailer();
+                    self.append_char_to_composition(ctx.unwrap(), trailer)?;
                     true
                 }
             };

@@ -91,7 +91,7 @@ Section "Uninstall"
 
 	SetOutPath $INSTDIR
 
-	!insertmacro UnInstallLib REGDLL NOTSHARED REBOOT_NOTPROTECTED "uo_keyboard_x86.dll"
+	!insertmacro UnInstallLib REGDLL NOTSHARED REBOOT_NOTPROTECTED "$INSTDIR\uo_keyboard_x86.dll"
 
 	IfErrors 0 continue_after_x86
 	Abort "Failed to unregister x86 IME DLL."
@@ -103,11 +103,11 @@ Section "Uninstall"
 
 		!define LIBRARY_X64
 
-		!insertmacro UnInstallLib REGDLL NOTSHARED REBOOT_NOTPROTECTED "uo_keyboard_amd64.dll"
+		!insertmacro UnInstallLib REGDLL NOTSHARED REBOOT_NOTPROTECTED "$INSTDIR\uo_keyboard_amd64.dll"
 
 		IfErrors 0 continue_after_amd64
 		!undef LIBRARY_X64
-		!insertmacro UnInstallLib REGDLL NOTSHARED REBOOT_NOTPROTECTED "uo_keyboard_x86.dll"
+		!insertmacro UnInstallLib REGDLL NOTSHARED REBOOT_NOTPROTECTED "$INSTDIR\uo_keyboard_x86.dll"
 		Abort "Failed to unregister amd64 IME DLL."
 
 		continue_after_amd64:

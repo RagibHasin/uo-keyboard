@@ -158,17 +158,19 @@ fn synthesize_key_input(wparam: WPARAM, lparam: LPARAM) {
             KEYEVENTF_KEYUP,
         ),
     ];
-    let _keys =
-        modifiers
-            .into_iter()
-            .filter_map(|(is_active, key)| {
-                is_active.then(|| make_input(key, 0, KEYBD_EVENT_FLAGS::default()))
-            })
-            .chain(active_keys)
-            .chain(modifiers.into_iter().rev().filter_map(|(is_active, key)| {
-                is_active.then(|| make_input(key, 0, KEYEVENTF_KEYUP))
-            }))
-            .collect::<Vec<_>>();
+    let _keys = modifiers
+        .into_iter()
+        .filter(|(is_active, _)| *is_active)
+        .map(|(_, key)| make_input(key, 0, KEYBD_EVENT_FLAGS::default()))
+        .chain(active_keys)
+        .chain(
+            modifiers
+                .into_iter()
+                .rev()
+                .filter(|(is_active, _)| *is_active)
+                .map(|(_, key)| make_input(key, 0, KEYEVENTF_KEYUP)),
+        )
+        .collect::<Vec<_>>();
 
     unsafe { SendInput(&active_keys, std::mem::size_of::<INPUT>() as _) };
 }

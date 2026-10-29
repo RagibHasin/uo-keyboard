@@ -13,6 +13,8 @@ fn main() {
         .compile()
         .unwrap();
 
+    std::fs::create_dir_all("src/generated").unwrap();
+    
     println!("cargo::rerun-if-changed=mim/bn-khipro-classic.mim");
 
     m17n_im::Parser::parse_from_path("mim/bn-khipro-classic.mim")

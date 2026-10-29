@@ -8,6 +8,8 @@ Avro Phonetic translation uses another fantastic open-source project [`okkhor`](
 
 Khipro `.mim` files are from [Khipro installer](https://github.com/KhiproTeam/khipro-installer), and are utilized through [`m17n-im`](https://github.com/RagibHasin/m17n-im/).
 
+This IME bundles [v37.0.3](https://github.com/rank-coder/khipro-m17n/releases/tag/clsc-v37.0.3) of Khipro Classic and [v2.0.2](https://github.com/KhiproTeam/khipro-dark-m17n/releases/tag/drk-v2.0.2) of Khipro Dark.
+
 ## How to use
 
 1. Download and install `uo_keyboard_setup_*.exe` from the [latest](https://github.com/RagibHasin/uo-keyboard/releases) release.

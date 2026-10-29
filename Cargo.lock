@@ -164,9 +164,9 @@ checksum = "f9f8bd3e56ce4dfc153cf470fffbfa98c7620958b312ca5c3a4b8d5181fd13c6"
 
 [[package]]
 name = "m17n-im"
-version = "0.1.0"
+version = "0.2.0"
 source = "registry+https://github.com/rust-lang/crates.io-index"
-checksum = "1dc5f2cbe37defccb15383efab4aee11601e832843d171816f32d6354e18633f"
+checksum = "54685f42b8a6d99ea512b2451bca8d1a39ae8d2ce6332322fcffa7efcafd1893"
 dependencies = [
  "winnow",
 ]

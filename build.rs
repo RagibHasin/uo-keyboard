@@ -3,11 +3,13 @@
 
 fn main() {
     const IME_ICON_INDEX_AVRO: &str = "11";
-    const IME_ICON_INDEX_KHIPRO: &str = "12";
+    const IME_ICON_INDEX_KHIPRO_CLASSIC: &str = "12";
+    const IME_ICON_INDEX_KHIPRO_DARK: &str = "13";
 
     winres::WindowsResource::new()
         .set_icon_with_id("resources/Avro.ico", IME_ICON_INDEX_AVRO)
-        .set_icon_with_id("resources/Khipro.ico", IME_ICON_INDEX_KHIPRO)
+        .set_icon_with_id("resources/KhiproClassic.ico", IME_ICON_INDEX_KHIPRO_CLASSIC)
+        .set_icon_with_id("resources/KhiproDark.ico", IME_ICON_INDEX_KHIPRO_DARK)
         .compile()
         .unwrap();
 

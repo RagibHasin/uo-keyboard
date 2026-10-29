@@ -26,9 +26,14 @@ pub(crate) fn register_profile(dll_instance_handle: HMODULE) -> Result<()> {
             globals::IME_ICON_INDEX_AVRO,
         ),
         (
-            globals::IME_PROFILE_KHIPRO,
-            globals::IME_PROFILE_DESCRIPTION_KHIPRO,
-            globals::IME_ICON_INDEX_KHIPRO,
+            globals::IME_PROFILE_KHIPRO_CLASSIC,
+            globals::IME_PROFILE_DESCRIPTION_KHIPRO_CLASSIC,
+            globals::IME_ICON_INDEX_KHIPRO_CLASSIC,
+        ),
+        (
+            globals::IME_PROFILE_KHIPRO_DARK,
+            globals::IME_PROFILE_DESCRIPTION_KHIPRO_DARK,
+            globals::IME_ICON_INDEX_KHIPRO_DARK,
         ),
     ] {
         let description = description.encode_utf16().collect::<Vec<_>>();
@@ -56,7 +61,10 @@ pub(crate) fn unregister_profile() -> Result<()> {
         &CLSID_TF_InputProcessorProfiles,
     )?;
 
-    for guid in [globals::IME_PROFILE_AVRO, globals::IME_PROFILE_KHIPRO] {
+    for guid in [
+        globals::IME_PROFILE_AVRO,
+        globals::IME_PROFILE_KHIPRO_CLASSIC,
+    ] {
         unsafe {
             profile_manager.UnregisterProfile(&globals::IME_CLSID, globals::IME_LANGID, &guid, 0)
         }?;

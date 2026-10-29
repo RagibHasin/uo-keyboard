@@ -13,6 +13,12 @@ pub(crate) const IME_PROFILE_AVRO: GUID = GUID::from_u128(0x3cbd54da_d734_46fe_8
 pub(crate) const IME_PROFILE_DESCRIPTION_AVRO: &str = "Ũõ Keyboard (অভ্র)";
 pub(crate) const IME_ICON_INDEX_AVRO: u32 = (-11i32).cast_unsigned();
 
-pub(crate) const IME_PROFILE_KHIPRO: GUID = GUID::from_u128(0x5f9083f2_0f4a_4c6e_af95_12c7bfc1603e);
-pub(crate) const IME_PROFILE_DESCRIPTION_KHIPRO: &str = "Ũõ Keyboard (ক্ষিপ্র)";
-pub(crate) const IME_ICON_INDEX_KHIPRO: u32 = (-12i32).cast_unsigned();
+pub(crate) const IME_PROFILE_KHIPRO_CLASSIC: GUID =
+    GUID::from_u128(0x5f9083f2_0f4a_4c6e_af95_12c7bfc1603e);
+pub(crate) const IME_PROFILE_DESCRIPTION_KHIPRO_CLASSIC: &str = "Ũõ Keyboard (ক্ষিপ্র)";
+pub(crate) const IME_ICON_INDEX_KHIPRO_CLASSIC: u32 = (-12i32).cast_unsigned();
+
+pub(crate) const IME_PROFILE_KHIPRO_DARK: GUID =
+    GUID::from_u128(0xf1f2529b_1d88_4d6d_930a_8a79046a6298);
+pub(crate) const IME_PROFILE_DESCRIPTION_KHIPRO_DARK: &str = "Ũõ Keyboard (ক্ষিপ্র ডার্ক)";
+pub(crate) const IME_ICON_INDEX_KHIPRO_DARK: u32 = (-13i32).cast_unsigned();

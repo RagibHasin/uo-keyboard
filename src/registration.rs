@@ -12,6 +12,24 @@ fn get_module_file_name(dll_instance_handle: HMODULE) -> Vec<u16> {
     file_name
 }
 
+const IME_PROFILES: &[(GUID, &str, u32)] = &[
+    (
+        globals::IME_PROFILE_AVRO,
+        globals::IME_PROFILE_DESCRIPTION_AVRO,
+        globals::IME_ICON_INDEX_AVRO,
+    ),
+    (
+        globals::IME_PROFILE_KHIPRO_CLASSIC,
+        globals::IME_PROFILE_DESCRIPTION_KHIPRO_CLASSIC,
+        globals::IME_ICON_INDEX_KHIPRO_CLASSIC,
+    ),
+    (
+        globals::IME_PROFILE_KHIPRO_DARK,
+        globals::IME_PROFILE_DESCRIPTION_KHIPRO_DARK,
+        globals::IME_ICON_INDEX_KHIPRO_DARK,
+    ),
+];
+
 pub(crate) fn register_profile(dll_instance_handle: HMODULE) -> Result<()> {
     let profile_manager = utils::create_instance_inproc::<ITfInputProcessorProfileMgr>(
         &CLSID_TF_InputProcessorProfiles,
@@ -19,32 +37,16 @@ pub(crate) fn register_profile(dll_instance_handle: HMODULE) -> Result<()> {
 
     let icon_file_name = get_module_file_name(dll_instance_handle);
 
-    for (guid, description, icon_index) in [
-        (
-            globals::IME_PROFILE_AVRO,
-            globals::IME_PROFILE_DESCRIPTION_AVRO,
-            globals::IME_ICON_INDEX_AVRO,
-        ),
-        (
-            globals::IME_PROFILE_KHIPRO_CLASSIC,
-            globals::IME_PROFILE_DESCRIPTION_KHIPRO_CLASSIC,
-            globals::IME_ICON_INDEX_KHIPRO_CLASSIC,
-        ),
-        (
-            globals::IME_PROFILE_KHIPRO_DARK,
-            globals::IME_PROFILE_DESCRIPTION_KHIPRO_DARK,
-            globals::IME_ICON_INDEX_KHIPRO_DARK,
-        ),
-    ] {
+    for (guid, description, icon_index) in IME_PROFILES {
         let description = description.encode_utf16().collect::<Vec<_>>();
         unsafe {
             profile_manager.RegisterProfile(
                 &globals::IME_CLSID,
                 globals::IME_LANGID,
-                &guid,
+                guid,
                 &description,
                 &icon_file_name,
-                icon_index,
+                *icon_index,
                 HKL::default(),
                 0,
                 true,
@@ -61,12 +63,9 @@ pub(crate) fn unregister_profile() -> Result<()> {
         &CLSID_TF_InputProcessorProfiles,
     )?;
 
-    for guid in [
-        globals::IME_PROFILE_AVRO,
-        globals::IME_PROFILE_KHIPRO_CLASSIC,
-    ] {
+    for (guid, _, _) in IME_PROFILES {
         unsafe {
-            profile_manager.UnregisterProfile(&globals::IME_CLSID, globals::IME_LANGID, &guid, 0)
+            profile_manager.UnregisterProfile(&globals::IME_CLSID, globals::IME_LANGID, guid, 0)
         }?;
     }
 

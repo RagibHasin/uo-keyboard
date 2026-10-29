@@ -13,7 +13,7 @@ jobs:
     runs-on: windows-latest
 
     steps:
-    - uses: actions/checkout@v6
+    - uses: actions/checkout@v7
 
     - name: Verify version tag matches Cargo.toml
       if: startsWith(github.ref, 'refs/tags/v')
@@ -36,14 +36,14 @@ jobs:
     - name: Build x86
       run: cargo build --release --target i686-pc-windows-msvc --verbose
 
-    - uses: negrutiu/nsis-install@v2
+    - uses: negrutiu/nsis-install@v3
     
     - name: Build installer
       run: |
         $version = (Get-Content Cargo.toml | Select-String '^version').ToString() -replace '.*=\s*"(.+)"','$1'
         makensis /V4 /WX /DVERSION=$version installer.nsi
 
-    - uses: actions/upload-artifact@v6
+    - uses: actions/upload-artifact@v7
       with:
         name: uo_keyboard
         path: uo_keyboard_setup.exe
@@ -58,8 +58,8 @@ jobs:
       contents: write
     
     steps:
-    - uses: actions/checkout@v6    
-    - uses: actions/download-artifact@v7
+    - uses: actions/checkout@v7    
+    - uses: actions/download-artifact@v8
       with:
         path: artifacts
     
@@ -74,7 +74,7 @@ jobs:
 
     - name: Create Preview Release
       if: github.ref == 'refs/heads/master'
-      uses: softprops/action-gh-release@v2
+      uses: softprops/action-gh-release@v3
       with:
         tag_name: preview
         name: Ũõ Keyboard Preview
@@ -84,9 +84,9 @@ jobs:
 
     - name: Create Stable Release
       if: startsWith(github.ref, 'refs/tags/v')
-      uses: softprops/action-gh-release@v2
+      uses: softprops/action-gh-release@v3
       with:
         name: Ũõ Keyboard ${{ github.ref_name }}
-        draft: false
+        draft: true
         prerelease: false
         files: artifacts/**/*

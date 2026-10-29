@@ -52,6 +52,7 @@ Section "Install" SEC_MAIN
 
 	SetOutPath $INSTDIR
 
+	; x86
 	!insertmacro InstallLib REGDLL NOTSHARED REBOOT_NOTPROTECTED "target\i686-pc-windows-msvc\release\uo_keyboard.dll" "$INSTDIR\uo_keyboard_x86.dll" "$INSTDIR"
 
 	IfErrors 0 continue_after_x86
@@ -60,6 +61,7 @@ Section "Install" SEC_MAIN
 	continue_after_x86:
 	File "/oname=uo_keyboard_x86.pdb" "target\i686-pc-windows-msvc\release\uo_keyboard.pdb"
 
+	; AMD64
 	${If} ${RunningX64}
 
 		!define LIBRARY_X64
@@ -67,17 +69,19 @@ Section "Install" SEC_MAIN
 
 		IfErrors 0 continue_after_amd64
 		!undef LIBRARY_X64
-		!insertmacro UnInstallLib REGDLL NOTSHARED REBOOT_NOTPROTECTED "target\i686-pc-windows-msvc\release\uo_keyboard.dll"
+		!insertmacro UnInstallLib REGDLL NOTSHARED REBOOT_NOTPROTECTED "$INSTDIR\uo_keyboard_x86.dll"
 		Abort "Failed to register amd64 IME DLL."
 
 		continue_after_amd64:
 		File "/oname=uo_keyboard_amd64.pdb" "target\release\uo_keyboard.pdb"
 
+		!undef LIBRARY_X64
+
 	${EndIf}
 
 	WriteRegStr HKLM "Software\Microsoft\Windows\CurrentVersion\Uninstall\uo_keyboard" "DisplayName" "Uo Keyboard"
 	WriteRegStr HKLM "Software\Microsoft\Windows\CurrentVersion\Uninstall\uo_keyboard" "DisplayVersion" "${VERSION}"
-	WriteRegStr HKLM "Software\Microsoft\Windows\CurrentVersion\Uninstall\uo_keyboard" "Publisher" "Your Name"
+	WriteRegStr HKLM "Software\Microsoft\Windows\CurrentVersion\Uninstall\uo_keyboard" "Publisher" "Muhammad Ragib Hasin"
 	WriteRegStr HKLM "Software\Microsoft\Windows\CurrentVersion\Uninstall\uo_keyboard" "UninstallString" '"$INSTDIR\uo_keyboard_uninstall.exe"'
 	WriteRegDWORD HKLM "Software\Microsoft\Windows\CurrentVersion\Uninstall\uo_keyboard" "NoModify" 1
 	WriteRegDWORD HKLM "Software\Microsoft\Windows\CurrentVersion\Uninstall\uo_keyboard" "NoRepair" 1
@@ -91,27 +95,30 @@ Section "Uninstall"
 
 	SetOutPath $INSTDIR
 
-	!insertmacro UnInstallLib REGDLL NOTSHARED REBOOT_NOTPROTECTED "uo_keyboard_x86.dll"
+	; x86
+	!insertmacro UnInstallLib REGDLL NOTSHARED REBOOT_NOTPROTECTED "$INSTDIR\uo_keyboard_x86.dll"
 
 	IfErrors 0 continue_after_x86
 	Abort "Failed to unregister x86 IME DLL."
 
 	continue_after_x86:
-	Delete "uo_keyboard_x86.pdb"
+	Delete "$INSTDIR\uo_keyboard_x86.pdb"
 
+	; AMD64
 	${If} ${RunningX64}
 
 		!define LIBRARY_X64
 
-		!insertmacro UnInstallLib REGDLL NOTSHARED REBOOT_NOTPROTECTED "uo_keyboard_amd64.dll"
+		!insertmacro UnInstallLib REGDLL NOTSHARED REBOOT_NOTPROTECTED "$INSTDIR\uo_keyboard_amd64.dll"
 
 		IfErrors 0 continue_after_amd64
 		!undef LIBRARY_X64
-		!insertmacro UnInstallLib REGDLL NOTSHARED REBOOT_NOTPROTECTED "uo_keyboard_x86.dll"
-		Abort "Failed to unregister amd64 IME DLL."
+		Abort "Failed to unregister AMD64 IME DLL."
 
 		continue_after_amd64:
-		Delete "uo_keyboard_amd64.pdb"
+		Delete "$INSTDIR\uo_keyboard_amd64.pdb"
+
+		!undef LIBRARY_X64
 
 	${EndIf}
 

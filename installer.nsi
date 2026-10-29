@@ -75,8 +75,6 @@ Section "Install" SEC_MAIN
 		continue_after_amd64:
 		File "/oname=uo_keyboard_amd64.pdb" "target\release\uo_keyboard.pdb"
 
-		!undef LIBRARY_X64
-
 	${EndIf}
 
 	WriteRegStr HKLM "Software\Microsoft\Windows\CurrentVersion\Uninstall\uo_keyboard" "DisplayName" "Uo Keyboard"
@@ -117,8 +115,6 @@ Section "Uninstall"
 
 		continue_after_amd64:
 		Delete "$INSTDIR\uo_keyboard_amd64.pdb"
-
-		!undef LIBRARY_X64
 
 	${EndIf}
 

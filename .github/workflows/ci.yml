@@ -68,7 +68,11 @@ jobs:
     
     - name: Re-Tag preview
       if: github.ref == 'refs/heads/master'
-      run: gh release delete preview --yes || true
+      run: |
+        gh release delete preview --cleanup-tag --yes || true
+
+        # Also clean up a leftover tag if necessary.
+        git push origin :refs/tags/preview || true
       env:
         GH_TOKEN: ${{ github.token }}
 

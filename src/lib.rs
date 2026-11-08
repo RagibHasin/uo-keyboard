@@ -6,13 +6,14 @@ use std::cell::{self, RefCell};
 use windows::Win32::{Foundation::*, UI::TextServices::*};
 use windows::core::*;
 
-mod utils;
 mod transcriber;
+mod utils;
 
 mod globals;
 
 mod dll;
 mod factory;
+mod log_utils;
 mod registration;
 
 mod active_profile_notify_sink;

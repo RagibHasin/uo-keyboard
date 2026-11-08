@@ -69,23 +69,14 @@ unsafe extern "system" fn DllMain(
 
             let trace_filter = tracing_subscriber::EnvFilter::new("error,uo_keyboard=trace");
             tracing_subscriber::registry()
-                .with(
-                    tracing_flight_recorder::FlightRecorderLayer::new(
-                        tracing_flight_recorder::FlightRecorder::with_default_capacity(),
-                    )
-                    .with_dump_on(
-                        tracing_flight_recorder::LevelTrigger::new(tracing::Level::ERROR),
-                        "C:/Windows/Temp",
-                        "UoBanglaKeyboard",
-                        0,
-                    )
-                    .with_filter(trace_filter),
-                )
+                .with(log_utils::timed_subscriber().with_filter(trace_filter))
                 .init();
 
             tracing::trace!("Uo Bangla Keyboard loaded");
         }
         DLL_PROCESS_DETACH => {
+            log_utils::shutdown_timer();
+
             unsafe { DeleteCriticalSection(&raw mut CS) };
             tracing::trace!("Uo Bangla Keyboard unloaded");
         }

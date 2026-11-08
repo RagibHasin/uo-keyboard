@@ -6,7 +6,7 @@ use crate::*;
 use key_class::{KeyAction, is_active};
 use windows::Win32::UI::{Input::KeyboardAndMouse::*, WindowsAndMessaging::GetMessageExtraInfo};
 
-const SYNTH: usize = 0x746e7953;
+const SYNTH: isize = 0x746e7953;
 
 impl Ime_Impl {
     // This theoretically makes sense, but a confirmation is needed whether a real
@@ -30,7 +30,7 @@ impl ITfKeyEventSink_Impl for Ime_Impl {
     #[tracing::instrument(skip_all, ret, err)]
     fn OnTestKeyDown(&self, _: Ref<'_, ITfContext>, wparam: WPARAM, _: LPARAM) -> Result<BOOL> {
         Ok((!self.is_keyboard_disabled()
-            && unsafe { GetMessageExtraInfo() } != LPARAM(SYNTH.cast_signed())
+            && unsafe { GetMessageExtraInfo() }.0 != SYNTH
             && !matches!(
                 (
                     KeyAction::classify(wparam.0 as _, self.composition().is_some()),
@@ -53,45 +53,41 @@ impl ITfKeyEventSink_Impl for Ime_Impl {
 
     #[tracing::instrument(skip(self, ctx), ret, err)]
     fn OnKeyDown(&self, ctx: Ref<'_, ITfContext>, wparam: WPARAM, lparam: LPARAM) -> Result<BOOL> {
+        let is_eaten = !self.is_keyboard_disabled() && unsafe { GetMessageExtraInfo() }.0 != SYNTH;
+
+        tracing::trace!(has_ctx = ctx.is_some(), is_eaten);
+
+        if !is_eaten {
+            return Ok(is_eaten.into());
+        }
+
         let composing = self.composition().is_some();
-        let is_eaten = !self.is_keyboard_disabled()
-            && unsafe { GetMessageExtraInfo() } != LPARAM(SYNTH.cast_signed())
-            && match (
-                KeyAction::classify(wparam.0 as _, composing),
-                convert_vkey(wparam.0 as _),
-            ) {
-                (KeyAction::Pass, _) | (KeyAction::OneShot | KeyAction::Append, Err(_)) => false,
-                (KeyAction::OneShot, Ok(ch)) => {
-                    self.add_single_char(ctx.unwrap(), ch)?;
-                    true
-                }
-                (KeyAction::Append, Ok(ch)) => {
-                    self.append_char_to_composition(ctx.unwrap(), ch)?;
-                    true
-                }
-                (KeyAction::End, _) => {
-                    self.finish_composition(ctx.as_ref())?;
-                    synthesize_key_input(wparam, lparam);
-                    true
-                }
-                (KeyAction::Backspace, _) => {
-                    self.pop_char_from_composition(ctx.unwrap())?;
-                    true
-                }
-                (KeyAction::Cancel, _) => {
-                    self.cancel_composition(ctx.unwrap())?;
-                    true
-                }
-                (KeyAction::AppendDot, _) => {
-                    self.append_char_to_composition(ctx.unwrap(), b'.')?;
+        let key_class = KeyAction::classify(wparam.0 as _, composing);
+        let converted_key = convert_vkey(wparam.0 as _);
 
-                    let trailer = self.state().unwrap().transcriber.dot_trailer();
-                    self.append_char_to_composition(ctx.unwrap(), trailer)?;
-                    true
-                }
-            };
+        tracing::trace!(composing, ?key_class, ?converted_key);
 
-        Ok(is_eaten.into())
+        match (key_class, converted_key) {
+            (KeyAction::Pass, _) | (KeyAction::OneShot | KeyAction::Append, Err(_)) => {
+                return Ok(false.into());
+            }
+            (KeyAction::OneShot, Ok(ch)) => self.add_single_char(ctx.unwrap(), ch)?,
+            (KeyAction::Append, Ok(ch)) => self.append_char_to_composition(ctx.unwrap(), ch)?,
+            (KeyAction::End, _) => {
+                self.finish_composition(ctx.as_ref())?;
+                synthesize_key_input(wparam, lparam);
+            }
+            (KeyAction::Backspace, _) => self.pop_char_from_composition(ctx.unwrap())?,
+            (KeyAction::Cancel, _) => self.cancel_composition(ctx.unwrap())?,
+            (KeyAction::AppendDot, _) => {
+                self.append_char_to_composition(ctx.unwrap(), b'.')?;
+
+                let trailer = self.state().unwrap().transcriber.dot_trailer();
+                self.append_char_to_composition(ctx.unwrap(), trailer)?;
+            }
+        }
+
+        Ok(true.into())
     }
 
     // #[tracing::instrument(skip_all, ret, err)]
@@ -184,7 +180,7 @@ fn make_input(key: VIRTUAL_KEY, scan: u16, flags: KEYBD_EVENT_FLAGS) -> INPUT {
                 wScan: scan,
                 dwFlags: flags,
                 time: 0,
-                dwExtraInfo: SYNTH,
+                dwExtraInfo: SYNTH.cast_unsigned(),
             },
         },
     }

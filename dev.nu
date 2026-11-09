@@ -1,4 +1,4 @@
-def main [action: string] {
+def main [action: string, profile: string = "debug"] {
     let install_dir = 'C:\Program Files\UoKeyboardDev'
     let dll_filename = 'uo_keyboard.dll'
     let dll_src_path = $"target\\release\\($dll_filename)"
@@ -6,7 +6,7 @@ def main [action: string] {
 
     match $action {
         install => {
-            ^cargo build --release
+            ^cargo build --profile $profile
 
             if not ($dll_src_path | path exists) {
                 error make { msg: $"Source DLL not found: ($dll_src_path)" }

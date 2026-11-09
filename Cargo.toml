@@ -8,7 +8,7 @@ license = "MPL-2.0"
 crate-type = ["cdylib"]
 
 [dependencies]
-m17n-im = { version = "0.2.0", features = ["embed"] }
+m17n-im = { version = "0.2.1", features = ["embed"] }
 okkhor = "0.10.0"
 tracing = "0.1.44"
 tracing-flight-recorder = "0.3.0"
@@ -38,7 +38,7 @@ windows-core = "0.62.2"
 windows-registry = "0.6.1"
 
 [build-dependencies]
-m17n-im = { version = "0.2.0", features = ["codegen"] }
+m17n-im = { version = "0.2.1", features = ["codegen"] }
 winres = "0.1.12"
 
 [profile.release]
